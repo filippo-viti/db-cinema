@@ -5,7 +5,9 @@ class CinemaData
 {
     private $connection = null;
 
-    public function __construct() {}
+    public function __construct()
+    {
+    }
 
     public function getConnection()
     {
@@ -59,5 +61,14 @@ class CinemaData
             $result->free();
         }
         return $rv;
+    }
+
+    public function insertDataFilm()
+    {
+        $connection = $this->getConnection();
+        $connection->begin_transaction();
+        $commandFilm = $connection->prepare(
+            "INSERT INTO `Film`(`id_film`, `titolo`, `anno`, `regista`, `nazionalita`, `produzione`, `distribuzione`, `durata`, `colore`, `trama`, `valutazione`, `id_genere`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"
+        );
     }
 }
