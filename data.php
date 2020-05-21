@@ -1,12 +1,33 @@
 <?php
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/get_list.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
 class CinemaData
 {
-    private $connection = null;
+    private $connection;
+    private $movieList;
+    private $repository;
 
     public function __construct()
     {
+        $this->connection = null;
+        $this->movieList = new MovieList;
+        // TODO catch exceptions
+        $key = file_get_contents("api_key.txt");
+        $token  = new \Tmdb\ApiToken($key);
+        $client = new \Tmdb\Client($token);
+        $this->repository = new \Tmdb\Repository\MovieRepository($client);
+    }
+
+    public function getMovieList()
+    {
+        return $this->movieList;
+    }
+
+    public function getRepository()
+    {
+        return $this->repository;
     }
 
     public function getConnection()
@@ -70,5 +91,35 @@ class CinemaData
         $commandFilm = $connection->prepare(
             "INSERT INTO `Film`(`id_film`, `titolo`, `anno`, `regista`, `nazionalita`, `produzione`, `distribuzione`, `durata`, `colore`, `trama`, `valutazione`, `id_genere`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"
         );
+        $commandFilm->bind_param(
+            "isissssissdi",
+            $paramIDFilm,
+            $paramTitolo,
+            $paramAnno,
+            $paramRegista,
+            $paramNazionalita,
+            $paramProduzione,
+            $paramDistribuzione,
+            $paramDurata,
+            $paramColore,
+            $paramTrama,
+            $paramValutazione,
+            $paramIDGenere
+        );
+        
+        // take data from api
+
+        foreach ($this->movieList as $movie) {
+            $paramIDFilm = $movie["id"];
+            $paramTitolo = $movie["original_title"];
+            $movieDetails = $this->repository->load($paramIDFilm);
+
+            $commandFilm->execute();
+            if ($commandFilm->affected_rows <= 0) {
+                throw new Exception("!!!!!->Insert error: " . $commandFilm->error);
+            }
+        }
+        $connection->commit();
+        $commandFilm->close();
     }
 }
