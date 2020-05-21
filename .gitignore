@@ -1,5 +1,4 @@
 movie_data/*
 vendor
-composer.lock
 test.php
 api_key.txt
