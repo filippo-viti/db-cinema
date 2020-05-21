@@ -36,6 +36,9 @@ class MovieList
 
         $url = "http://files.tmdb.org/p/exports/movie_ids_$currentDate.json.gz";
         $gz = "movie_data/" . basename($url);
+        if (!file_exists("movie_data")) {
+            mkdir("movie_data", 0777, true);
+        }
         $this->getFile($url, $gz);
         $this->unzip($gz, 'movie_data/movie_id_list.json');
     }
