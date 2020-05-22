@@ -109,11 +109,19 @@ class CinemaData
         
         // take data from api
 
-        foreach ($this->movieList as $movie) {
-            $paramIDFilm = $movie["id"];
-            $paramTitolo = $movie["original_title"];
-            $movieDetails = $this->repository->load($paramIDFilm);
-
+        foreach ($this->movieList as $movieIDTitle) {
+            $paramIDFilm = $movieIDTitle["id"];
+            $paramTitolo = $movieIDTitle["original_title"];
+            $movie = $this->repository->load($paramIDFilm);
+            $paramAnno = $this->getYear($movie);
+            $paramRegista = $this->getDirector($movie);
+            // TODO nation
+            // Missing production and distribution
+            // Missing duration
+            // missing color
+            // Missing plot
+            // Missing rating
+            
             $commandFilm->execute();
             if ($commandFilm->affected_rows <= 0) {
                 throw new Exception("!!!!!->Insert error: " . $commandFilm->error);
@@ -121,5 +129,26 @@ class CinemaData
         }
         $connection->commit();
         $commandFilm->close();
+    }
+
+    public function getDirector($movie)
+    {
+        $crew = $movie->getCredits()->getCrew()->getCrew();
+        foreach ($crew as $member) {
+            if ($member->getJob() == "Director") {
+                return $member->getName();
+            }
+        }
+        return null;
+    }
+
+    public function getYear($movie)
+    {
+        $releases = $movie->getReleases($movieID)->toArray();
+        foreach ($releases as $release) {
+            $dates[] = $release->getReleaseDate();
+        }
+        $year = (int)(min($dates)->format("Y"));
+        return $year;
     }
 }
