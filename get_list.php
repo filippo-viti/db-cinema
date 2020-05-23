@@ -4,6 +4,8 @@ class MovieList
 {
     private $list;
     private $timestamp;
+    // set to negative if you want to get all movies
+    private $MAX_MOVIES = 500;
 
     public function __construct()
     {
@@ -85,8 +87,10 @@ class MovieList
 
     private function parseJSON($json)
     {
-        $objectArray = [];
-        foreach ($json as $line) {
+        foreach ($json as $key => $line) {
+            if ($key == $this->MAX_MOVIES) {
+                break;
+            }
             $object = json_decode($line, true);
             $objectArray[] = $object;
         }
