@@ -5,7 +5,7 @@ require_once __DIR__ . '/ExportList.php';
 class PersonList extends ExportList
 {
     // set to negative if you want to get all movies
-    private $MAX_PEOPLE = 500;
+    private $MAX_PEOPLE = 100;
 
     public function __construct()
     {
