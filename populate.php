@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/data.php';
+require_once __DIR__ . '/CinemaData.php';
 
 echo "Downloading valid ID list...\n";
 $cinemaData = new CinemaData();
