@@ -19,4 +19,7 @@ echo "Inserting into table Ha_Vinto...\n";
 $cinemaData->insertDataHaVinto();
 echo "Inserting into table Premi...\n";
 $cinemaData->insertDataPremi();
+echo "Inserting into table Musicisti...\n";
+$cinemaData->insertDataMusicisti();
+// TODO reset FOREIGN_KEY_CHECKS
 echo "Done\n";

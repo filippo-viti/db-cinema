@@ -357,6 +357,45 @@ class CinemaData
         $commandColonneSonore->close();
     }
 
+    public function insertDataMusicisti()
+    {
+        $connection = $this->getConnection();
+        $result = $connection->query("SELECT DISTINCT `id_musicista` FROM `Colonne_Sonore`");
+        while ($row = $result->fetch_array(MYSQLI_NUM)) {
+            $musicianIDS[] = $row;
+        }
+        $connection->begin_transaction();
+        $commandMusicisti = $connection->prepare(
+            "INSERT INTO `Musicisti`(`id_musicista`, `nominativo`, `nazionalita`, `data_nascita`, `sesso`, `note`) VALUES (?,?,?,?,?,?)"
+        );
+        $commandMusicisti->bind_param(
+            "isssss",
+            $paramIDMusicista,
+            $paramNominativo,
+            $paramNazionalita,
+            $paramDataNascita,
+            $paramSesso,
+            $paramNote
+        );
+        foreach ($musicianIDS as $musicianID) {
+            $paramIDMusicista = $musicianID[0];
+            $person = $this->peopleRepository->load($paramIDMusicista);
+            $paramNominativo = $person->getName();
+            $paramNazionalita = $person->getPlaceOfBirth(); //inaccurate but it is the only information available
+            $paramDataNascita = $person->getBirthDay()->format("Y-m-d");
+            $paramSesso = $this->getGender($person);
+            $paramNote = $person->getBiography();
+            $commandMusicisti->execute();
+            if ($commandMusicisti->affected_rows <= 0) {
+                throw new Exception(
+                    "!!!!!->Insert error: " . $commandMusicisti->error
+                );
+            }
+        }
+        $connection->commit();
+        $commandMusicisti->close();
+    }
+
     public function getDirector($movie)
     {
         $crew = $movie
