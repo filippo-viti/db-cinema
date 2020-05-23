@@ -12,6 +12,8 @@ class CinemaData
     private $movieRepository;
     private $genreRepository;
     private $peopleRepository;
+    private $MAX_HA_VINTO = 100;
+    private $MAX_PREMI = 100;
 
     public function __construct()
     {
@@ -254,6 +256,45 @@ class CinemaData
         $commandAttori->close();
     }
 
+    public function insertDataHaVinto()
+    {
+        $connection = $this->getConnection();
+        $result = $connection->query("SELECT `id_film` FROM `Film`");
+        while ($row = $result->fetch_array(MYSQLI_NUM)){
+            $validIDs[] = $row;
+        }
+        $IDCount = count($validIDs);
+        $connection->begin_transaction();
+        $commandHaVinto = $connection->prepare(
+            "INSERT INTO `Ha_Vinto`(`id_premio`, `id_film`, `anno`) VALUES(?,?,?)"
+        );
+        $commandHaVinto->bind_param(
+            "iis",
+            $paramIDPremio,
+            $paramIDFilm,
+            $paramAnno
+        );
+        for ($i = 0; $i < $this->MAX_HA_VINTO; $i++) {
+            $paramIDPremio = rand(1, 200);
+            $randomIndex = rand(0, $IDCount);
+            $paramIDFilm = $validIDs[$randomIndex][0];
+            // TODO year could end up before movie release
+            $paramAnno = rand(1900, date("Y"));
+            try {
+                $commandHaVinto->execute();
+                if ($commandHaVinto->affected_rows <= 0) {
+                    throw new Exception(
+                        "!!!!!->Insert error: " . $commandHaVinto->error
+                    );
+                }
+            } catch (Exception $e) {
+                echo "Skipping duplicate id $paramIDPremio\n";
+            }
+        }
+        $connection->commit();
+        $commandHaVinto->close();
+    }
+
     public function getDirector($movie)
     {
         $crew = $movie
@@ -348,11 +389,10 @@ class CinemaData
     {
         if ($person->isMale()) {
             return 'M';
-        } else if ($person->isFemale()) {
+        } elseif ($person->isFemale()) {
             return 'F';
         } else {
             return 'NS';
         }
-        
     }
 }

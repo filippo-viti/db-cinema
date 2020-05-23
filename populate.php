@@ -15,3 +15,6 @@ echo "Inserting into table Film...\n";
 $cinemaData->insertDataFilm();
 echo "Inserting into table Attori...\n";
 $cinemaData->insertDataAttori();
+echo "Inserting into table Ha_Vinto...\n";
+$cinemaData->insertDataHaVinto();
+echo "Done\n";
