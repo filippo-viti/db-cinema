@@ -30,3 +30,9 @@ Add your TMDB API key:
 $ echo -n <key here> > api_key.txt
 ```
 Import the databes in your system using the file `cinema.sql`
+
+## Usage
+To populate the database:  
+```
+$ php populate.php
+```
