@@ -27,6 +27,6 @@ $ composer install
 ```  
 Add your TMDB API key:
 ```
-$ echo <key here> > api_key.txt
+$ echo -n <key here> > api_key.txt
 ```
 Import the databes in your system using the file `cinema.sql`
