@@ -7,7 +7,8 @@ class CinemaData
 {
     private $connection;
     private $movieList;
-    private $repository;
+    private $movieRepository;
+    private $genreRepository;
 
     public function __construct()
     {
@@ -17,7 +18,8 @@ class CinemaData
         $key = file_get_contents("api_key.txt");
         $token = new \Tmdb\ApiToken($key);
         $client = new \Tmdb\Client($token);
-        $this->repository = new \Tmdb\Repository\MovieRepository($client);
+        $this->movieRepository = new \Tmdb\Repository\MovieRepository($client);
+        $this->genreRepository = new \Tmdb\Repository\GenreRepository($client);
     }
 
     public function getMovieList()
@@ -27,7 +29,7 @@ class CinemaData
 
     public function getRepository()
     {
-        return $this->repository;
+        return $this->movieRepository;
     }
 
     public function getConnection()
@@ -106,13 +108,12 @@ class CinemaData
             $paramValutazione,
             $paramIDGenere
         );
-        echo "Getting data...\n";
         // take data from api
         foreach ($this->movieList->getList() as $movieIDTitle) {
             $paramIDFilm = $movieIDTitle["id"];
             $paramTitolo = $movieIDTitle["original_title"];
             echo "Movie: $paramTitolo\n";
-            $movie = $this->repository->load($paramIDFilm);
+            $movie = $this->movieRepository->load($paramIDFilm);
             $paramAnno = $this->getYear($movie);
             $paramRegista = $this->getDirector($movie);
             $paramNazionalita = $this->getCountry($movie);
@@ -203,6 +204,33 @@ class CinemaData
             return "A_COLORI";
         } else {
             return "BIANCO_E_NERO";
+        }
+    }
+
+    public function insertDataGeneri()
+    {
+        $connection = $this->getConnection();
+        $connection->begin_transaction();
+        $commandGeneri = $connection->prepare(
+            "INSERT INTO `Genere`(`id_genere`, `descrizione`) VALUES (?,?)"
+        );
+        $commandGeneri->bind_param("is", $paramIDGenere, $paramDescrizione);
+
+        $genres = $this->genreRepository->loadCollection();
+        foreach ($genres as $genre) {
+            $paramIDGenere = $genre->getId();
+            $paramDescrizione = $genre->getName();
+            echo "ID: $paramIDGenere, Name: $paramDescrizione\n";
+            try {
+                $commandGeneri->execute();
+                if ($commandGeneri->affected_rows <= 0) {
+                    throw new Exception(
+                        "!!!!!->Insert error: " . $commandGeneri->error
+                    );
+                }
+            } catch (Exception $e) {
+                echo "Skipping duplicate id $paramIDGenere\n";
+            }
         }
     }
 }
