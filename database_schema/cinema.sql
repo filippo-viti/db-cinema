@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Creato il: Mag 18, 2020 alle 10:43
+-- Creato il: Mag 23, 2020 alle 20:00
 -- Versione del server: 10.4.11-MariaDB
--- Versione PHP: 7.4.2
+-- Versione PHP: 7.4.1
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET AUTOCOMMIT = 0;
@@ -31,8 +31,8 @@ SET time_zone = "+00:00";
 CREATE TABLE `Attori` (
   `id_attore` int(10) UNSIGNED NOT NULL,
   `nominativo` varchar(255) NOT NULL,
-  `nazionalita` varchar(255) NOT NULL,
-  `data_nascita` date NOT NULL,
+  `nazionalita` varchar(255) DEFAULT NULL,
+  `data_nascita` date DEFAULT NULL,
   `sesso` enum('M','F','NS') NOT NULL,
   `note` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -59,16 +59,16 @@ CREATE TABLE `Colonne_Sonore` (
 CREATE TABLE `Film` (
   `id_film` int(10) UNSIGNED NOT NULL,
   `titolo` varchar(255) NOT NULL,
-  `anno` year(4) NOT NULL,
-  `regista` varchar(255) NOT NULL,
-  `nazionalita` varchar(255) NOT NULL,
-  `produzione` varchar(255) NOT NULL,
+  `anno` int(4) NOT NULL,
+  `regista` varchar(255) DEFAULT NULL,
+  `nazionalita` varchar(255) DEFAULT NULL,
+  `produzione` varchar(255) DEFAULT NULL,
   `distribuzione` varchar(255) NOT NULL,
   `durata` int(10) UNSIGNED NOT NULL,
   `colore` enum('A_COLORI','BIANCO_E_NERO') NOT NULL,
   `trama` text NOT NULL,
   `valutazione` float UNSIGNED NOT NULL,
-  `id_genere` int(10) UNSIGNED NOT NULL
+  `id_genere` int(10) UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -103,8 +103,8 @@ CREATE TABLE `Ha_Vinto` (
 CREATE TABLE `Musicisti` (
   `id_musicista` int(10) UNSIGNED NOT NULL,
   `nominativo` varchar(255) NOT NULL,
-  `nazionalita` varchar(255) NOT NULL,
-  `data_nascita` date NOT NULL,
+  `nazionalita` varchar(255) DEFAULT NULL,
+  `data_nascita` date DEFAULT NULL,
   `sesso` enum('M','F','NS') NOT NULL,
   `note` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -130,7 +130,7 @@ CREATE TABLE `Premi` (
 CREATE TABLE `Recita_In` (
   `id_attore` int(10) UNSIGNED NOT NULL,
   `id_film` int(10) UNSIGNED NOT NULL,
-  `personaggio` varchar(255) NOT NULL,
+  `personaggio` varchar(511) NOT NULL,
   `valutazione` float UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
