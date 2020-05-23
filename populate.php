@@ -10,5 +10,7 @@ foreach ($tables as $table) {
     echo ">>$table\n";
     $cinemaData->emptyTable($table);
 }
+echo "Inserting into table Generi...\n";
+$cinemaData->insertDataGeneri();
 echo "Inserting into table Film...\n";
 $cinemaData->insertDataFilm();
