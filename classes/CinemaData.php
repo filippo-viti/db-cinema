@@ -13,7 +13,6 @@ class CinemaData
     private $genreRepository;
     private $peopleRepository;
     private $MAX_HA_VINTO = 100;
-    private $MAX_PREMI = 100;
 
     public function __construct()
     {
@@ -122,7 +121,6 @@ class CinemaData
         foreach ($this->movieList->getList() as $movieIDTitle) {
             $paramIDFilm = $movieIDTitle["id"];
             $paramTitolo = $movieIDTitle["original_title"];
-            echo "Movie: $paramTitolo\n";
             $movie = $this->movieRepository->load($paramIDFilm);
             $paramAnno = $this->getYear($movie);
             $paramRegista = $this->getDirector($movie);
@@ -141,6 +139,7 @@ class CinemaData
                 );
             }
             $this->insertDataRecitaIn($movie, $paramIDFilm);
+            $this->insertDataColonneSonore($movie, $paramIDFilm);
         }
         $connection->commit();
         $commandFilm->close();
@@ -168,7 +167,6 @@ class CinemaData
             $paramIDAttore = $castMember->getId();
             $paramPersonaggio = $castMember->getCharacter();
             $paramValutazione = $this->generateRating();
-            echo "ID: $paramIDAttore, Character: $paramPersonaggio\n";
             try {
                 $commandRecitaIn->execute();
                 if ($commandRecitaIn->affected_rows <= 0) {
@@ -197,7 +195,6 @@ class CinemaData
         foreach ($genres as $genre) {
             $paramIDGenere = $genre->getId();
             $paramDescrizione = $genre->getName();
-            echo "ID: $paramIDGenere, Name: $paramDescrizione\n";
             try {
                 $commandGeneri->execute();
                 if ($commandGeneri->affected_rows <= 0) {
@@ -240,7 +237,6 @@ class CinemaData
             $paramDataNascita = $person->getBirthDay()->format("Y-m-d");
             $paramSesso = $this->getGender($person);
             $paramNote = $person->getBiography();
-            echo "Actor ID: $paramIDAttore, Name: $paramNominativo\n";
             try {
                 $commandAttori->execute();
                 if ($commandAttori->affected_rows <= 0) {
@@ -328,6 +324,37 @@ class CinemaData
         }
         $connection->commit();
         $commandPremi->close();
+    }
+
+    public function insertDataColonneSonore($movie, $paramIDFilm)
+    {
+        $connection = $this->getConnection();
+        $connection->begin_transaction();
+        $commandColonneSonore = $connection->prepare(
+            "INSERT INTO `Colonne_Sonore`(`id_musicista`, `id_film`, `brano`, `valutazione`) VALUES (?,?,?,?)"
+        );
+        $commandColonneSonore->bind_param(
+            "iisd",
+            $paramIDMusicista,
+            $paramIDFilm,
+            $paramBrano,
+            $paramValutazione
+        );
+        $paramIDMusicista = $this->getMusicComposerID($movie);
+        if ($paramIDMusicista == null) {
+            $commandColonneSonore->close();
+            return;
+        }
+        $paramBrano = $this->generateTrack();
+        $paramValutazione = $this->generateRating();
+        $commandColonneSonore->execute();
+        if ($commandColonneSonore->affected_rows <= 0) {
+            throw new Exception(
+                "!!!!!->Insert error: " . $commandColonneSonore->error
+            );
+        }
+        $connection->commit();
+        $commandColonneSonore->close();
     }
 
     public function getDirector($movie)
@@ -435,5 +462,23 @@ class CinemaData
     {
         $id = rand(1, 30);
         return "Manifestazione$id";
+    }
+
+    private function getMusicComposerID($movie)
+    {
+        $credits = $movie->getCredits();
+        $crew = $credits->getCrew()->getCrew();
+        foreach ($crew as $member) {
+            if ($member->getJob() == "Original Music Composer") {
+                return $member->getId();
+            }
+        }
+        return null;
+    }
+
+    private function generateTrack()
+    {
+        $id = rand(1, 500);
+        return "Brano$id";
     }
 }
