@@ -130,9 +130,75 @@ class CinemaData
                     "!!!!!->Insert error: " . $commandFilm->error
                 );
             }
+            $this->insertDataRecitaIn($movie, $paramIDFilm);
         }
         $connection->commit();
         $commandFilm->close();
+    }
+
+    public function insertDataRecitaIn($movie, $paramIDFilm)
+    {
+        $connection = $this->getConnection();
+        $connection->begin_transaction();
+        $commandRecitaIn = $connection->prepare(
+            "INSERT INTO `Recita_In`(`id_attore`, `id_film`, `personaggio`, `valutazione`) VALUES (?,?,?,?)"
+        );
+        $commandRecitaIn->bind_param(
+            "iisd",
+            $paramIDAttore,
+            $paramIDFilm,
+            $paramPersonaggio,
+            $paramValutazione
+        );
+
+        $creditsCollection = $movie->getCredits();
+        $cast = $creditsCollection->getCast()->getCast();
+
+        foreach ($cast as $castMember) {
+            $paramIDAttore = $castMember->getId();
+            $paramPersonaggio = $castMember->getCharacter();
+            $paramValutazione = $this->generateRating();
+            echo "ID: $paramIDAttore, Character: $paramPersonaggio\n";
+            try {
+                $commandRecitaIn->execute();
+                if ($commandRecitaIn->affected_rows <= 0) {
+                    throw new Exception(
+                        "!!!!!->Insert error: " . $commandRecitaIn->error
+                    );
+                }
+            } catch (Exception $e) {
+                echo "Skipping duplicate id $paramIDAttore\n";
+            }
+        }
+        $connection->commit();
+        $commandRecitaIn->close();
+    }
+
+    public function insertDataGeneri()
+    {
+        $connection = $this->getConnection();
+        $connection->begin_transaction();
+        $commandGeneri = $connection->prepare(
+            "INSERT INTO `Genere`(`id_genere`, `descrizione`) VALUES (?,?)"
+        );
+        $commandGeneri->bind_param("is", $paramIDGenere, $paramDescrizione);
+
+        $genres = $this->genreRepository->loadCollection();
+        foreach ($genres as $genre) {
+            $paramIDGenere = $genre->getId();
+            $paramDescrizione = $genre->getName();
+            echo "ID: $paramIDGenere, Name: $paramDescrizione\n";
+            try {
+                $commandGeneri->execute();
+                if ($commandGeneri->affected_rows <= 0) {
+                    throw new Exception(
+                        "!!!!!->Insert error: " . $commandGeneri->error
+                    );
+                }
+            } catch (Exception $e) {
+                echo "Skipping duplicate id $paramIDGenere\n";
+            }
+        }
     }
 
     public function getDirector($movie)
@@ -207,30 +273,10 @@ class CinemaData
         }
     }
 
-    public function insertDataGeneri()
+    public function generateRating()
     {
-        $connection = $this->getConnection();
-        $connection->begin_transaction();
-        $commandGeneri = $connection->prepare(
-            "INSERT INTO `Genere`(`id_genere`, `descrizione`) VALUES (?,?)"
-        );
-        $commandGeneri->bind_param("is", $paramIDGenere, $paramDescrizione);
-
-        $genres = $this->genreRepository->loadCollection();
-        foreach ($genres as $genre) {
-            $paramIDGenere = $genre->getId();
-            $paramDescrizione = $genre->getName();
-            echo "ID: $paramIDGenere, Name: $paramDescrizione\n";
-            try {
-                $commandGeneri->execute();
-                if ($commandGeneri->affected_rows <= 0) {
-                    throw new Exception(
-                        "!!!!!->Insert error: " . $commandGeneri->error
-                    );
-                }
-            } catch (Exception $e) {
-                echo "Skipping duplicate id $paramIDGenere\n";
-            }
-        }
+        $rating = rand(1, 100);
+        $rating /= 10;
+        return $rating;
     }
 }
