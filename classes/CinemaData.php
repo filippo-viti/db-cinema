@@ -260,7 +260,7 @@ class CinemaData
     {
         $connection = $this->getConnection();
         $result = $connection->query("SELECT `id_film` FROM `Film`");
-        while ($row = $result->fetch_array(MYSQLI_NUM)){
+        while ($row = $result->fetch_array(MYSQLI_NUM)) {
             $validIDs[] = $row;
         }
         $IDCount = count($validIDs);
@@ -293,6 +293,41 @@ class CinemaData
         }
         $connection->commit();
         $commandHaVinto->close();
+    }
+
+    public function insertDataPremi()
+    {
+        $connection = $this->getConnection();
+        $result = $connection->query(
+            "SELECT DISTINCT `id_premio` FROM `Ha_Vinto`"
+        );
+        while ($row = $result->fetch_array(MYSQLI_NUM)) {
+            $validIDs[] = $row;
+        }
+        $IDCount = count($validIDs);
+        $connection->begin_transaction();
+        $commandPremi = $connection->prepare(
+            "INSERT INTO `Premi`(`id_premio`, `descrizione`, `manifestazione`) VALUES(?,?,?)"
+        );
+        $commandPremi->bind_param(
+            "iss",
+            $paramIDPremio,
+            $paramDescrizione,
+            $paramManifestazione
+        );
+        foreach ($validIDs as $premio) {
+            $paramIDPremio = $premio[0];
+            $paramDescrizione = "Descrizione premio $paramIDPremio";
+            $paramManifestazione = $this->generateEvent();
+            $commandPremi->execute();
+            if ($commandPremi->affected_rows <= 0) {
+                throw new Exception(
+                    "!!!!!->Insert error: " . $commandPremi->error
+                );
+            }
+        }
+        $connection->commit();
+        $commandPremi->close();
     }
 
     public function getDirector($movie)
@@ -394,5 +429,11 @@ class CinemaData
         } else {
             return 'NS';
         }
+    }
+
+    private function generateEvent()
+    {
+        $id = rand(1, 30);
+        return "Manifestazione$id";
     }
 }
