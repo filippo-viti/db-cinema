@@ -1,12 +1,14 @@
 <?php
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/MovieList.php';
+require_once __DIR__ . '/PersonList.php';
 require_once __DIR__ . '/vendor/autoload.php';
 
 class CinemaData
 {
     private $connection;
     private $movieList;
+    private $peopleList;
     private $movieRepository;
     private $genreRepository;
 
@@ -14,6 +16,7 @@ class CinemaData
     {
         $this->connection = null;
         $this->movieList = new MovieList();
+        $this->peopleList = new PersonList();
         // TODO catch exceptions
         $key = file_get_contents("api_key.txt");
         $token = new \Tmdb\ApiToken($key);
