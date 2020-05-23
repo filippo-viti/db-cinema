@@ -11,18 +11,23 @@ class CinemaData
     private $peopleList;
     private $movieRepository;
     private $genreRepository;
+    private $peopleRepository;
 
     public function __construct()
     {
         $this->connection = null;
         $this->movieList = new MovieList();
         $this->peopleList = new PersonList();
+
         // TODO catch exceptions
         $key = file_get_contents("api_key.txt");
         $token = new \Tmdb\ApiToken($key);
         $client = new \Tmdb\Client($token);
         $this->movieRepository = new \Tmdb\Repository\MovieRepository($client);
         $this->genreRepository = new \Tmdb\Repository\GenreRepository($client);
+        $this->peopleRepository = new \Tmdb\Repository\PeopleRepository(
+            $client
+        );
     }
 
     public function getMovieList()
@@ -202,11 +207,51 @@ class CinemaData
                 echo "Skipping duplicate id $paramIDGenere\n";
             }
         }
+        $connection->commit();
+        $commandGeneri->close();
     }
 
     public function insertDataAttori()
     {
-        
+        $connection = $this->getConnection();
+        $connection->begin_transaction();
+        $commandAttori = $connection->prepare(
+            "INSERT INTO `Attori`(`id_attore`, `nominativo`, `nazionalita`, `data_nascita`, `sesso`, `note`) VALUES (?,?,?,?,?,?)"
+        );
+        $commandAttori->bind_param(
+            "isssss",
+            $paramIDAttore,
+            $paramNominativo,
+            $paramNazionalita,
+            $paramDataNascita,
+            $paramSesso,
+            $paramNote
+        );
+        foreach ($this->peopleList->getList() as $personIDName) {
+            $paramIDAttore = $personIDName['id'];
+            $person = $this->peopleRepository->load($paramIDAttore);
+            if (!$this->isActor($person)) {
+                continue;
+            }
+            $paramNominativo = $personIDName['name'];
+            $paramNazionalita = $person->getPlaceOfBirth(); //inaccurate but it is the only information available
+            $paramDataNascita = $person->getBirthDay()->format("Y-m-d");
+            $paramSesso = $this->getGender($person);
+            $paramNote = $person->getBiography();
+            echo "Actor ID: $paramIDAttore, Name: $paramNominativo\n";
+            try {
+                $commandAttori->execute();
+                if ($commandAttori->affected_rows <= 0) {
+                    throw new Exception(
+                        "!!!!!->Insert error: " . $commandAttori->error
+                    );
+                }
+            } catch (Exception $e) {
+                echo "Skipping duplicate id $paramIDAttore\n";
+            }
+        }
+        $connection->commit();
+        $commandAttori->close();
     }
 
     public function getDirector($movie)
@@ -286,5 +331,28 @@ class CinemaData
         $rating = rand(1, 100);
         $rating /= 10;
         return $rating;
+    }
+
+    private function isActor($person)
+    {
+        $credits = $person->getMovieCredits();
+        $cast = $credits->getCast()->getCast();
+        if ($cast) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private function getGender($person)
+    {
+        if ($person->isMale()) {
+            return 'M';
+        } else if ($person->isFemale()) {
+            return 'F';
+        } else {
+            return 'NS';
+        }
+        
     }
 }
