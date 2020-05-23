@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/get_list.php';
+require_once __DIR__ . '/MovieList.php';
 require_once __DIR__ . '/vendor/autoload.php';
 
 class CinemaData
@@ -199,6 +199,11 @@ class CinemaData
                 echo "Skipping duplicate id $paramIDGenere\n";
             }
         }
+    }
+
+    public function insertDataAttori()
+    {
+        
     }
 
     public function getDirector($movie)
