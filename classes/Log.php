@@ -49,7 +49,8 @@ class Log
 
     private static function append($message, $type)
     {
-        $time = self::getTimestamp()->format("M d H:i:s");
+        $time = new DateTime();
+        $time = $time->format("M d H:i:s");
         $line = "$time [$type] $message\n";
         file_put_contents(self::getFullPath(), $line, FILE_APPEND);
     }
