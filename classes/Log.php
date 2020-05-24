@@ -1,78 +1,71 @@
 <?php
 class Log
 {
-    private $timestamp;
-    private $text;
-    private static $directory = "logs";
-    private $fileName;
+    private static $timestamp;
+    private static $text;
+    private static $fileName;
+    private static $DIRECTORY = "logs";
 
-    public function __construct()
+    public static function initialize()
     {
-        if (!file_exists(self::$directory)) {
-            mkdir(self::$directory, 0777, true);
+        if (!file_exists(self::$DIRECTORY)) {
+            mkdir(self::$DIRECTORY, 0777, true);
         }
-        $this->timestamp = new DateTime();
-        $name = $this->timestamp->format("Y-m-d_H:i:s");
-        $this->fileName = $name . ".log";
-        $this->text = "";
+        self::$timestamp = new DateTime();
+        $name = self::$timestamp->format("Y-m-d_H:i:s");
+        self::$fileName = $name . ".log";
+        self::$text = "";
     }
 
-    public function getTimestamp()
+    public static function getTimestamp()
     {
-        return $this->timestamp;
+        return self::$timestamp;
     }
 
-    public function getText()
+    public static function getText()
     {
-        return $this->text;
+        return self::$text;
     }
 
     public static function getDirectory()
     {
-        return self::$directory;
+        return self::$DIRECTORY;
     }
 
-    public function getFileName()
+    public static function getFileName()
     {
-        return $this->fileName;
+        return self::$fileName;
     }
 
-    public function getFullPath()
+    public static function getFullPath()
     {
-        return $this->getDirectory() . "/" . $this->getFileName();
+        return self::getDirectory() . "/" . self::getFileName();
     }
 
-    public function setText($text)
+    public static function setText($text)
     {
-        $this->text = $text;
-        return $this;
+        self::$text = $text;
     }
 
-    private function append($message, $type)
+    private static function append($message, $type)
     {
-        $time = $this->getTimestamp()->format("M d H:i:s");
+        $time = self::getTimestamp()->format("M d H:i:s");
         $line = "$time [$type] $message\n";
-        $this->setText($this->getText() . $line);
-        return $this;
+        file_put_contents(self::getFullPath(), $line, FILE_APPEND);
     }
 
-    public function writeInfo($message)
+    public static function writeInfo($message)
     {
-        $this->append($message, "Info");
+        self::append($message, "Info");
     }
 
-    public function writeError($message)
+    public static function writeError($message)
     {
-        $this->append($message, "Error");
+        self::append($message, "Error");
     }
 
-    public function writeWarning($message)
+    public static function writeWarning($message)
     {
-        $this->append($message, "Warning");
-    }
-
-    public function writeFile()
-    {
-        file_put_contents($this->getFullPath(), $this->getText());
+        self::append($message, "Warning");
     }
 }
