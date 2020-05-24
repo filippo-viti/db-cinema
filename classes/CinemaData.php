@@ -20,8 +20,10 @@ class CinemaData
         $this->movieList = new MovieList();
         $this->peopleList = new PersonList();
 
-        // TODO catch exceptions
         $key = file_get_contents("api_key.txt");
+        if (!$key) {
+            throw new Exception("[Error] No API key provided in api_key.txt");
+        }
         $token = new \Tmdb\ApiToken($key);
         $client = new \Tmdb\Client($token);
         $this->movieRepository = new \Tmdb\Repository\MovieRepository($client);
@@ -255,11 +257,11 @@ class CinemaData
     public function insertDataHaVinto()
     {
         $connection = $this->getConnection();
-        $result = $connection->query("SELECT `id_film` FROM `Film`");
+        $result = $connection->query("SELECT `id_film`, `anno` FROM `Film`");
         while ($row = $result->fetch_array(MYSQLI_NUM)) {
-            $validIDs[] = $row;
+            $resultArray[] = $row;
         }
-        $IDCount = count($validIDs);
+        $IDCount = count($resultArray);
         $connection->begin_transaction();
         $commandHaVinto = $connection->prepare(
             "INSERT INTO `Ha_Vinto`(`id_premio`, `id_film`, `anno`) VALUES(?,?,?)"
@@ -273,9 +275,9 @@ class CinemaData
         for ($i = 0; $i < $this->MAX_HA_VINTO; $i++) {
             $paramIDPremio = rand(1, 200);
             $randomIndex = rand(0, $IDCount);
-            $paramIDFilm = $validIDs[$randomIndex][0];
-            // TODO year could end up before movie release
-            $paramAnno = rand(1900, date("Y"));
+            $paramIDFilm = $resultArray[$randomIndex][0];
+            $minYear = $resultArray[$randomIndex][1];
+            $paramAnno = rand($minYear, $minYear + 3);
             try {
                 $commandHaVinto->execute();
                 if ($commandHaVinto->affected_rows <= 0) {
@@ -298,9 +300,9 @@ class CinemaData
             "SELECT DISTINCT `id_premio` FROM `Ha_Vinto`"
         );
         while ($row = $result->fetch_array(MYSQLI_NUM)) {
-            $validIDs[] = $row;
+            $resultArray[] = $row;
         }
-        $IDCount = count($validIDs);
+        $IDCount = count($resultArray);
         $connection->begin_transaction();
         $commandPremi = $connection->prepare(
             "INSERT INTO `Premi`(`id_premio`, `descrizione`, `manifestazione`) VALUES(?,?,?)"
@@ -311,7 +313,7 @@ class CinemaData
             $paramDescrizione,
             $paramManifestazione
         );
-        foreach ($validIDs as $premio) {
+        foreach ($resultArray as $premio) {
             $paramIDPremio = $premio[0];
             $paramDescrizione = "Descrizione premio $paramIDPremio";
             $paramManifestazione = $this->generateEvent();
