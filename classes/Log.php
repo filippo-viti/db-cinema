@@ -3,12 +3,14 @@ class Log
 {
     private $timestamp;
     private $text;
-    private $directoryPath;
+    private static $directory = "logs";
     private $fileName;
 
-    public function __construct($directoryPath)
+    public function __construct()
     {
-        $this->directoryPath = $directoryPath;
+        if (!file_exists(self::$directory)) {
+            mkdir(self::$directory, 0777, true);
+        }
         $this->timestamp = new DateTime();
         $name = $this->timestamp->format("Y-m-d_H:i:s");
         $this->fileName = $name . ".log";
@@ -25,9 +27,9 @@ class Log
         return $this->text;
     }
 
-    public function getDirectoryPath()
+    public static function getDirectory()
     {
-        return $this->directoryPath;
+        return self::$directory;
     }
 
     public function getFileName()
@@ -37,7 +39,7 @@ class Log
 
     public function getFullPath()
     {
-        return $this->getDirectoryPath() . $this->getFileName();
+        return $this->getDirectory() . "/" . $this->getFileName();
     }
 
     public function setText($text)
