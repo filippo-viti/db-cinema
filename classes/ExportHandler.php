@@ -22,7 +22,6 @@ class ExportHandler
 
     private static function getFile($url, $dest)
     {
-        // TODO check if file is outdated
         $fileName = basename($url);
         if (file_exists($dest)) {
             echo "File $dest already exists, skipping download\n";

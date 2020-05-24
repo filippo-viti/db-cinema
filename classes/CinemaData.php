@@ -177,7 +177,6 @@ class CinemaData
                     );
                 }
             } catch (Exception $e) {
-                echo "Skipping duplicate id $paramIDAttore\n";
             }
         }
         $connection->commit();
@@ -205,7 +204,6 @@ class CinemaData
                     );
                 }
             } catch (Exception $e) {
-                echo "Skipping duplicate id $paramIDGenere\n";
             }
         }
         $connection->commit();
@@ -247,7 +245,6 @@ class CinemaData
                     );
                 }
             } catch (Exception $e) {
-                echo "Skipping duplicate id $paramIDAttore\n";
             }
         }
         $connection->commit();
@@ -286,7 +283,6 @@ class CinemaData
                     );
                 }
             } catch (Exception $e) {
-                echo "Skipping duplicate id $paramIDPremio\n";
             }
         }
         $connection->commit();
@@ -362,7 +358,9 @@ class CinemaData
     public function insertDataMusicisti()
     {
         $connection = $this->getConnection();
-        $result = $connection->query("SELECT DISTINCT `id_musicista` FROM `Colonne_Sonore`");
+        $result = $connection->query(
+            "SELECT DISTINCT `id_musicista` FROM `Colonne_Sonore`"
+        );
         while ($row = $result->fetch_array(MYSQLI_NUM)) {
             $musicianIDS[] = $row;
         }
