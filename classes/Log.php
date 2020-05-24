@@ -48,7 +48,8 @@ class Log
         return $this;
     }
 
-    private function append($message, $type) {
+    private function append($message, $type)
+    {
         $time = $this->getTimestamp()->format("M d H:i:s");
         $line = "$time [$type] $message\n";
         $this->setText($this->getText() . $line);
