@@ -3,3 +3,4 @@ vendor
 test.php
 api_key.txt
 .vscode
+logs
