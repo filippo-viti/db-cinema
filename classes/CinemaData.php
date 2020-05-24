@@ -22,7 +22,9 @@ class CinemaData
 
         $key = file_get_contents("api_key.txt");
         if (!$key) {
-            throw new Exception("[Error] No API key provided in api_key.txt");
+            $message = "No API key provided in api_key.txt";
+            Log::writeError($message);
+            throw new Exception($message);
         }
         $token = new \Tmdb\ApiToken($key);
         $client = new \Tmdb\Client($token);

@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . "/Log.php";
+
 class ExportHandler
 {
     public static function getExport($date, $type)
@@ -24,33 +26,39 @@ class ExportHandler
     {
         $fileName = basename($url);
         if (file_exists($dest)) {
-            echo "File $dest already exists, skipping download\n";
+            Log::writeInfo("File $dest already exists, skipping download");
             return;
         }
+        Log::writeInfo("Getting file $url");
         if (!file_put_contents($dest, file_get_contents($url))) {
-            throw new Exception("Failed to download list file $fileName");
+            $message = "Failed to download list file $fileName";
+            Log::writeError($message);
+            throw new Exception($message);
         }
     }
 
     private static function unzip($gz, $dest)
     {
         if (file_exists($dest)) {
-            echo "File $dest already exists, skipping decompression\n";
+            Log::writeInfo("File $dest already exists, skipping decompression");
             return;
         }
         $gz = gzopen($gz, 'rb');
         if (!$gz) {
-            throw new UnexpectedValueException('Could not open gzip file');
+            $message = "Could not open gzip file";
+            Log::writeError($message);
+            throw new UnexpectedValueException($message);
         }
 
         $dest = fopen($dest, 'wb');
         if (!$dest) {
             gzclose($gz);
-            throw new UnexpectedValueException(
-                'Could not open destination file'
-            );
+            $message = "Could not open destination file";
+            Log::writeError($message);
+            throw new UnexpectedValueException($message);
         }
 
+        Log::writeInfo("Unzipping file $gz");
         while (!gzeof($gz)) {
             fwrite($dest, gzread($gz, 4096));
         }
