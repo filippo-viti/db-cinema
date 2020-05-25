@@ -12,7 +12,9 @@ class PersonList extends ExportList
         parent::__construct();
         ExportHandler::getExport($this->timestamp, "person");
         // list is an array of json objects
-        $file = file("person_data/person_id_list.json");
+        $json = "person_data/person_id_list.json";
+        $file = file($json);
+        Log::writeInfo("Getting " . $this->MAX_PEOPLE . "movies from $json");
         $this->list = ExportHandler::parseJSON($file, $this->MAX_PEOPLE);
     }
 }

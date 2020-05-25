@@ -60,6 +60,10 @@ class CinemaData
 
     public function closeConnection()
     {
+        $connection = $this->getConnection();
+        $connection->begin_transaction();
+        $connection->query("SET FOREIGN_KEY_CHECKS = 1;");
+        $connection->commit();
         $this->connection->close();
     }
 
@@ -68,19 +72,19 @@ class CinemaData
         $connection = $this->getConnection();
         $connection->begin_transaction();
         $connection->query("SET FOREIGN_KEY_CHECKS = 0;");
+        Log::writeInfo("Truncating table $tableName");
         if ($connection->query("TRUNCATE TABLE $tableName;") == false) {
             $connection->rollback();
             throw new Exception("truncate failed: " . $connection->error);
         }
-        // $connection->query("SET FOREIGN_KEY_CHECKS = 1;");
         if (
             $connection->query("ALTER TABLE $tableName AUTO_INCREMENT = 1") ==
             false
         ) {
             $connection->rollback();
-            throw new Exception(
-                "autoincrement reset failed: " . $connection->error
-            );
+            $message = "autoincrement reset failed: " . $connection->error;
+            Log::writeError($message);
+            throw new Exception($message);
         }
         $connection->commit();
     }
@@ -136,11 +140,26 @@ class CinemaData
             $paramTrama = $movie->getOverview();
             $paramValutazione = $movie->getVoteAverage();
             $paramIDGenere = $this->getGenre($movie);
+            Log::writeInfo(
+                "Inserting into Film: 
+                id_film=$paramIDFilm, 
+                titolo=$paramTitolo, 
+                anno=$paramAnno, 
+                regista=$paramRegista, 
+                nazionalita=$paramNazionalita, 
+                produzione=$paramProduzione, 
+                distribuzione=$paramDistribuzione, 
+                durata=$paramDurata, 
+                colore=$paramColore, 
+                trama=$paramTrama, 
+                valutazione=$paramValutazione, 
+                id_genere=$paramIDGenere"
+            );
             $commandFilm->execute();
             if ($commandFilm->affected_rows <= 0) {
-                throw new Exception(
-                    "!!!!!->Insert error: " . $commandFilm->error
-                );
+                $message = "!!!!!->Insert error: " . $commandFilm->error;
+                Log::writeError($message);
+                throw new Exception($message);
             }
             $this->insertDataRecitaIn($movie, $paramIDFilm);
             $this->insertDataColonneSonore($movie, $paramIDFilm);
@@ -171,14 +190,25 @@ class CinemaData
             $paramIDAttore = $castMember->getId();
             $paramPersonaggio = $castMember->getCharacter();
             $paramValutazione = $this->generateRating();
+            Log::writeInfo(
+                "Inserting into Recita_In: 
+                id_attore=$paramIDAttore, 
+                id_film=$paramIDFilm, 
+                personaggio=$paramPersonaggio, 
+                valutazione=$paramValutazione"
+            );
             try {
                 $commandRecitaIn->execute();
                 if ($commandRecitaIn->affected_rows <= 0) {
-                    throw new Exception(
-                        "!!!!!->Insert error: " . $commandRecitaIn->error
-                    );
+                    $message =
+                        "!!!!!->Insert error: " . $commandRecitaIn->error;
+                    Log::writeError("$message");
+                    throw new Exception($message);
                 }
             } catch (Exception $e) {
+                Log::writeWarning(
+                    "ID couple $paramIDAttore $paramIDFilm is duplicate, skipping insertion"
+                );
             }
         }
         $connection->commit();
@@ -198,14 +228,20 @@ class CinemaData
         foreach ($genres as $genre) {
             $paramIDGenere = $genre->getId();
             $paramDescrizione = $genre->getName();
+            Log::writeInfo(
+                "Inserting into Genere: id_genere=$paramIDGenere, descrizione=$paramDescrizione"
+            );
             try {
                 $commandGeneri->execute();
                 if ($commandGeneri->affected_rows <= 0) {
-                    throw new Exception(
-                        "!!!!!->Insert error: " . $commandGeneri->error
-                    );
+                    $message = "!!!!!->Insert error: " . $commandGeneri->error;
+                    Log::writeError($message);
+                    throw new Exception($message);
                 }
             } catch (Exception $e) {
+                Log::writeWarning(
+                    "ID $paramIDGenere is duplicate, skipping insertion"
+                );
             }
         }
         $connection->commit();
@@ -239,14 +275,26 @@ class CinemaData
             $paramDataNascita = $person->getBirthDay()->format("Y-m-d");
             $paramSesso = $this->getGender($person);
             $paramNote = $person->getBiography();
+            Log::writeInfo(
+                "Inserting into Attori: 
+                id_attore=$paramIDAttore, 
+                nominativo=$paramNominativo, 
+                nazionalita=$paramNazionalita, 
+                data_nascita=$paramDataNascita, 
+                sesso=$paramSesso, 
+                note=$paramNote"
+            );
             try {
                 $commandAttori->execute();
                 if ($commandAttori->affected_rows <= 0) {
-                    throw new Exception(
-                        "!!!!!->Insert error: " . $commandAttori->error
-                    );
+                    $message = "!!!!!->Insert error: " . $commandAttori->error;
+                    Log::writeError($message);
+                    throw new Exception($message);
                 }
             } catch (Exception $e) {
+                Log::writeWarning(
+                    "ID $paramIDAttore is duplicate, skipping insertion"
+                );
             }
         }
         $connection->commit();
@@ -273,18 +321,27 @@ class CinemaData
         );
         for ($i = 0; $i < $this->MAX_HA_VINTO; $i++) {
             $paramIDPremio = rand(1, 200);
-            $randomIndex = rand(0, $IDCount);
+            $randomIndex = rand(0, $IDCount - 1);
             $paramIDFilm = $resultArray[$randomIndex][0];
             $minYear = $resultArray[$randomIndex][1];
             $paramAnno = rand($minYear, $minYear + 3);
+            Log::writeInfo(
+                "Inserting into Ha_Vinto: 
+                id_premio=$paramIDPremio, 
+                id_film=$paramIDFilm, 
+                anno=$paramAnno"
+            );
             try {
                 $commandHaVinto->execute();
                 if ($commandHaVinto->affected_rows <= 0) {
-                    throw new Exception(
-                        "!!!!!->Insert error: " . $commandHaVinto->error
-                    );
+                    $message = "!!!!!->Insert error: " . $commandHaVinto->error;
+                    Log::writeError($message);
+                    throw new Exception($message);
                 }
             } catch (Exception $e) {
+                Log::writeWarning(
+                    "ID couple $paramIDPremio $paramIDFilm is duplicate, skipping insertion"
+                );
             }
         }
         $connection->commit();
@@ -315,11 +372,17 @@ class CinemaData
             $paramIDPremio = $premio[0];
             $paramDescrizione = "Descrizione premio $paramIDPremio";
             $paramManifestazione = $this->generateEvent();
+            Log::writeInfo(
+                "Inserting into Premi: 
+                id_premio=$paramIDPremio, 
+                descrizione=$paramDescrizione, 
+                manifestazione=$paramManifestazione"
+            );
             $commandPremi->execute();
             if ($commandPremi->affected_rows <= 0) {
-                throw new Exception(
-                    "!!!!!->Insert error: " . $commandPremi->error
-                );
+                $message = "!!!!!->Insert error: " . $commandPremi->error;
+                Log::writeError($message);
+                throw new Exception($message);
             }
         }
         $connection->commit();
@@ -347,11 +410,18 @@ class CinemaData
         }
         $paramBrano = $this->generateTrack();
         $paramValutazione = $this->generateRating();
+        Log::writeInfo(
+            "Inserting into Colonne_Sonore: 
+            id_musicista=$paramIDMusicista, 
+            id_film=$paramIDFilm, 
+            brano=$paramBrano, 
+            valutazione=$paramValutazione"
+        );
         $commandColonneSonore->execute();
         if ($commandColonneSonore->affected_rows <= 0) {
-            throw new Exception(
-                "!!!!!->Insert error: " . $commandColonneSonore->error
-            );
+            $message = "!!!!!->Insert error: " . $commandColonneSonore->error;
+            Log::writeError($message);
+            throw new Exception($message);
         }
         $connection->commit();
         $commandColonneSonore->close();
@@ -387,11 +457,20 @@ class CinemaData
             $paramDataNascita = $person->getBirthDay()->format("Y-m-d");
             $paramSesso = $this->getGender($person);
             $paramNote = $person->getBiography();
+            Log::writeInfo(
+                "Inserting into Musicisti: 
+                id_musicista=$paramIDMusicista, 
+                nominativo=$paramNominativo, 
+                nazionalita=$paramNazionalita, 
+                data_nascita=$paramDataNascita, 
+                sesso=$paramSesso, 
+                note=$paramNote"
+            );
             $commandMusicisti->execute();
             if ($commandMusicisti->affected_rows <= 0) {
-                throw new Exception(
-                    "!!!!!->Insert error: " . $commandMusicisti->error
-                );
+                $message = "!!!!!->Insert error: " . $commandMusicisti->error;
+                Log::writeError($message);
+                throw new Exception($message);
             }
         }
         $connection->commit();

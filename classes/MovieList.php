@@ -1,5 +1,4 @@
 <?php
-
 require_once __DIR__ . '/ExportHandler.php';
 require_once __DIR__ . '/ExportList.php';
 
@@ -13,7 +12,9 @@ class MovieList extends ExportList
         parent::__construct();
         ExportHandler::getExport($this->timestamp, "movie");
         // list is an array of json objects
-        $file = file("movie_data/movie_id_list.json");
+        $json = "movie_data/movie_id_list.json";
+        $file = file($json);
+        Log::writeInfo("Getting " . $this->MAX_MOVIES . "movies from $json");
         $this->list = ExportHandler::parseJSON($file, $this->MAX_MOVIES);
     }
 }

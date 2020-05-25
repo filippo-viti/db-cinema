@@ -16,6 +16,7 @@ class ExportHandler
         $url = "http://files.tmdb.org/p/exports/$type" . "_ids_$date.json.gz";
         $gz = $type . "_data/" . basename($url);
         if (!file_exists($type . "_data")) {
+            Log::writeInfo("Creating directory $type" . "_data");
             mkdir($type . "_data", 0777, true);
         }
         self::getFile($url, $gz);

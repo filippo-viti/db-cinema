@@ -2,6 +2,7 @@
 require_once __DIR__ . '/classes/CinemaData.php';
 require_once __DIR__ . "/classes/Log.php";
 
+$startTime = microtime(true);
 Log::initialize();
 echo "Downloading valid ID list...\n";
 $cinemaData = new CinemaData();
@@ -23,5 +24,10 @@ echo "Inserting into table Premi...\n";
 $cinemaData->insertDataPremi();
 echo "Inserting into table Musicisti...\n";
 $cinemaData->insertDataMusicisti();
-// TODO reset FOREIGN_KEY_CHECKS
+$cinemaData->closeConnection();
 echo "Done\n";
+$endTime = microtime(true);
+$elapsedTime = $endTime - $startTime;
+echo "Elapsed time: $elapsedTime s";
+Log::writeInfo("Success, elapsed time: $elapsedTime s");
+echo "Log file: " . Log::getFullPath();
