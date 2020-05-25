@@ -28,6 +28,6 @@ $cinemaData->closeConnection();
 echo "Done\n";
 $endTime = microtime(true);
 $elapsedTime = $endTime - $startTime;
-echo "Elapsed time: $elapsedTime s";
+echo "Elapsed time: $elapsedTime s\n";
 Log::writeInfo("Success, elapsed time: $elapsedTime s");
-echo "Log file: " . Log::getFullPath();
+echo "Log file: " . Log::getFullPath() . "\n";
