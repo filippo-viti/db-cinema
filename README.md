@@ -1,10 +1,9 @@
-# db-cinema [WIP]
-Simple movie MySQL database with data taken from TMDB API  
-Credit to:  
+# db-cinema  
+Simple movie MySQL database with data taken from [TMDB API](https://www.themoviedb.org/documentation/api)  
 
 ![alt text](https://www.themoviedb.org/assets/2/v4/logos/v2/blue_long_1-8ba2ac31f354005783fab473602c34c3f4fd207150182061e425d366e4f34596.svg "TMDB logo")
 
-## Installation  
+## Installation (Ubuntu)  
 Requires  
 - `php`  
 - `php-mysql`  
@@ -29,7 +28,7 @@ Add your TMDB API key:
 ```
 $ echo -n <key here> > api_key.txt
 ```
-Import the databes in your system using the file `cinema.sql`
+Import the database in your system using the file `cinema.sql`
 
 ## Usage
 To populate the database:  
