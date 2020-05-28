@@ -11,15 +11,25 @@ class ExportHandler
         if ($hour < 8) {
             $date->sub(new DateInterval('P1D'));
         }
-        $date = $date->format("m_d_Y");
+        $dateString = $date->format("m_d_Y");
 
-        $url = "http://files.tmdb.org/p/exports/$type" . "_ids_$date.json.gz";
+        $url = "http://files.tmdb.org/p/exports/$type" . "_ids_$dateString.json.gz";
         $gz = $type . "_data/" . basename($url);
         if (!file_exists($type . "_data")) {
             Log::writeInfo("Creating directory $type" . "_data");
             mkdir($type . "_data", 0777, true);
         }
-        self::getFile($url, $gz);
+        try {
+            self::getFile($url, $gz);
+        } catch (\Exception $e) {
+            $date->sub(new DateInterval('P1D'));
+            $dateString = $date->format("m_d_Y");
+            $url = "http://files.tmdb.org/p/exports/$type" . "_ids_$dateString.json.gz";
+            Log::writeWarning($e->getMessage() . ", trying to get $url");
+            $gz = $type . "_data/" . basename($url);
+            self::getFile($url, $gz);
+        }
+        
         self::unzip($gz, $type . "_data/$type" . "_id_list.json");
     }
 
@@ -31,7 +41,11 @@ class ExportHandler
             return;
         }
         Log::writeInfo("Getting file $url");
-        if (!file_put_contents($dest, file_get_contents($url))) {
+        $export = file_get_contents($url);
+        if (!$export) {
+            throw new Exception("Failed to download today's export");
+        }
+        if (!file_put_contents($dest, $export)) {
             $message = "Failed to download list file $fileName";
             Log::writeError($message);
             throw new Exception($message);
